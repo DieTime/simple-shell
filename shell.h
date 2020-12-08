@@ -61,4 +61,24 @@ int help();
  */
 int quit();
 
+/**
+ * Executing linux shell commands
+ *
+ * @param args - tokens for executing
+ * @return status for main loop - CONTINUE
+ */
+int launch(char** args);
+
+/**
+ * Background task checking
+ *
+ * @param args - tokens for launching
+ * linux shell command
+ *
+ * @return true or false
+ */
+int is_background(char** args);
+
+void kill_foreground();
+
 #endif //SHELL_H

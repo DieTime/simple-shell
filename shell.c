@@ -2,9 +2,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 #include <pwd.h>
+#include <wait.h>
 
 #include "shell.h"
+
+pid_t pid;
 
 void display() {
     // Try get and print username with color
@@ -118,8 +122,7 @@ int execute(char** args) {
     } else if (strcmp(args[0], "quit") == 0) {
         return quit();
     } else {
-        printf("Linux terminal command not supported now...\n");
-        return CONTINUE;
+       return launch(args);
     }
 }
 
@@ -151,4 +154,74 @@ int help() {
 
 int quit() {
     return EXIT;
+}
+
+int launch(char** args) {
+    int background; // Is background task
+    int status;
+
+    // Checking if task is background
+    background = is_background(args);
+
+    // Create child process
+    pid = fork();
+
+    // If created failure log error
+    if (pid < 0) {
+        printf("[ERROR] Couldn't create child process!\n");
+    }
+    // Child process
+    else if (pid == 0) {
+        // Try launch task
+        if (execvp(args[0], args) == -1) {
+            printf("[ERROR] Couldn't execute unknown command!\n");
+        }
+    }
+    // Parent process
+    else {
+        if (background) {
+            // TODO: Write background implementation
+            kill_foreground();
+        } else {
+            // Add signal for killing child on ctrl-c
+            signal(SIGINT, kill_foreground);
+
+            // Wait child process end
+            do {
+                waitpid(pid, &status, WUNTRACED);
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
+            // Reset signal
+            signal(SIGINT, SIG_IGN);
+        }
+    }
+
+    return CONTINUE;
+}
+
+int is_background(char** args) {
+    // Current position in array
+    int last_arg = 0;
+
+    // Finding last arg in array
+    while (args[last_arg + 1] != NULL) {
+        last_arg += 1;
+    }
+
+    // Checking if task is background`
+    if (strcmp(args[last_arg], "&") == 0) {
+        // Remove '&' token for future executing
+        args[last_arg] = NULL;
+
+        // Return true
+        return 1;
+    }
+
+    // Return false if  '&' wasn't founded
+    return 0;
+}
+
+void kill_foreground() {
+    kill(pid, SIGTERM);
+    printf("\n");
 }

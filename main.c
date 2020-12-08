@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include "shell.h"
 
@@ -8,8 +9,10 @@ int main() {
     char** args;   // Tokens in user input
     int    status; // Status of execution
 
+    signal(SIGINT, SIG_IGN);
+
     // Shell is running while
-    // status != EXIT
+    // status == CONTINUE != EXIT
     do {
         // Printing left shell info
         display();
