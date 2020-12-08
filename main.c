@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include "shell.h"
 
 int main() {
-    printf("Hello, World!\n");
+    char* line = readline();
+    printf("Entered line: '%s'\n", line);
     return 0;
 }
