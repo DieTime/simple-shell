@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "shell.h"
 
@@ -53,7 +54,7 @@ char** split(char* line) {
     // Allocate memory for tokens array
     char** tokens = malloc(sizeof(char*) * buff_size);
     if (!tokens) {
-        fprintf(stderr, "[ERROR] Couldn't allocate buffer for splitting!\n");
+        printf("[ERROR] Couldn't allocate buffer for splitting!\n");
         return NULL;
     }
 
@@ -69,7 +70,7 @@ char** split(char* line) {
 
             tokens = realloc(tokens, buff_size * sizeof(char*));
             if (!tokens) {
-                fprintf(stderr, "lsh: allocation error\n");
+                printf("[ERROR] Couldn't reallocate buffer for tokens!\n");
                 return NULL;
             }
         }
@@ -82,4 +83,49 @@ char** split(char* line) {
     tokens[position] = NULL;
 
     return tokens;
+}
+
+int execute(char** args) {
+    if (args[0] == NULL) {
+        return CONTINUE;
+    } else if (strcmp(args[0], "cd") == 0) {
+        return cd(args);
+    } else if (strcmp(args[0], "help") == 0) {
+        return help();
+    } else if (strcmp(args[0], "quit") == 0) {
+        return quit();
+    } else {
+        printf("Linux terminal command not supported now...\n");
+        return CONTINUE;
+    }
+}
+
+int cd(char** args) {
+    if (args[1] == NULL) {
+        printf("[ERROR] Expected argument for \"cd\" command!\n");
+    } else if (chdir(args[1]) != 0) {
+        printf("[ERROR] Couldn't change directory to \"%s\"!\n", args[1]);
+    }
+
+    return CONTINUE;
+}
+
+int help() {
+    printf(
+        "Simple shell by Denis Glazkov\n"
+        "Just type program names and arguments, and hit enter.\n\n"
+
+        "Built in functions:\n"
+        "  cd   \n"
+        "  help \n"
+        "  quit \n\n"
+
+        "Use the man command for information on other programs.\n"
+    );
+
+    return 1;
+}
+
+int quit() {
+    return EXIT;
 }

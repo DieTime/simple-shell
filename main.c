@@ -4,16 +4,27 @@
 #include "shell.h"
 
 int main() {
-    char* line = readline();
-    printf("Entered line: '%s'\n", line);
+    char*  line;
+    char** args;
+    int    status;
 
-    char** tokens = split(line);
-    printf("Tokens in line: ");
-    for (size_t i = 0; tokens[i] != NULL; i++) {
-        printf("'%s' ", tokens[i]);
-    }
+    do {
+        line = readline();
+        if (line == NULL) {
+            exit(1);
+        }
 
-    free(line);
-    free(tokens);
+        args = split(line);
+        if (args == NULL) {
+            free(line);
+            exit(2);
+        }
+
+        status = execute(args);
+
+        free(line);
+        free(args);
+    } while (status);
+
     return 0;
 }
