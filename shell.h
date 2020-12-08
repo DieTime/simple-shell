@@ -7,6 +7,12 @@
 #define EXIT 0
 
 /**
+ * Display left shell info like:
+ * username and current working directory
+ */
+void display();
+
+/**
  * Getting user input from shell
 
  * @return user-entered string

@@ -2,8 +2,31 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <pwd.h>
 
 #include "shell.h"
+
+void display() {
+    // Try get and print username with color
+    // \033[92m - green color
+    // \033[0m  - reset color
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+    if (pw != NULL) {
+        printf("\033[92m%s\033[0m:", pw->pw_name);
+    }
+
+    // Try get and print current directory with color
+    // \033[90m - grey color
+    // \033[0m  - reset color
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("\033[90m%s\033[0m", cwd);
+    }
+
+    // Print end of shell info
+    printf("# ");
+}
 
 char* readline() {
     size_t position  = 0;
