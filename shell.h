@@ -142,8 +142,8 @@ void kill_foreground();
 int add_background(pid_t pid, char* name);
 
 /**
- * Child process end handler for
- * removing task from background
+ * Handler on background process for
+ * mark ended task as finished
  */
 void mark_background();
 
