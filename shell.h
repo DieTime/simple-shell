@@ -16,7 +16,7 @@ struct bg_task_t {
     pid_t   pid;           // Process id
     int     finished;      // Process state
     char*   timestamp;     // Process state
-    char*   cmd;          // Command cmd
+    char*   cmd;           // Command cmd
 };
 typedef struct bg_task_t bg_task;
 
@@ -78,7 +78,8 @@ int cd(char** args);
 int help();
 
 /**
- * Terminate shell
+ * Terminate shell and kill
+ * all active tasks
  *
  * @return status for main loop - EXIT
  */
@@ -90,6 +91,15 @@ int quit();
  * @return status for main loop - CONTINUE
  */
 int bg();
+
+/**
+ * Terminate one of background task
+ * by index passed in args
+ *
+ * @param args - data with index of task
+ * @return - status for main loop - CONTINUE
+ */
+int term(char** args);
 
 /**
  * Executing linux shell commands
@@ -127,7 +137,6 @@ void kill_foreground();
  * into background tasks
  *
  * @param pid - child background process id
- *
  * @return 0 on success, -1 on error
  */
 int add_background(pid_t pid, char* name);
@@ -137,11 +146,5 @@ int add_background(pid_t pid, char* name);
  * removing task from background
  */
 void mark_background();
-
-/**
- * Killing all active processes
- * before EXIT execute status
- */
-void kill_all();
 
 #endif //SHELL_H

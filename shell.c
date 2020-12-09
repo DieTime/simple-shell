@@ -9,7 +9,14 @@
 
 #include "shell.h"
 
-tasks t = { .foreground = -1, .background = NULL, .cursor = 0, .capacity = 0 };
+// Global variable for storing
+// active tasks
+tasks t = {
+    .foreground = -1,
+    .background = NULL,
+    .cursor = 0,
+    .capacity = 0
+};
 
 void display() {
     // Try get and print username with color
@@ -120,6 +127,8 @@ int execute(char** args) {
         return quit();
     } else if (strcmp(args[0], "bg") == 0) {
         return bg();
+    } else if (strcmp(args[0], "term") == 0) {
+        return term(args);
     } else {
        return launch(args);
     }
@@ -153,7 +162,31 @@ int help() {
 }
 
 int quit() {
-    kill_all();
+    // Temp background task variable
+    bg_task* bt;
+
+    // Disable callbacks on child killed
+    signal(SIGCHLD, SIG_IGN);
+
+    // Kill foreground process
+    if (t.foreground != -1) {
+        kill_foreground();
+    }
+
+    // Kill all active background tasks
+    for (size_t i = 0; i < t.cursor; i++) {
+        // Place task to temp variable
+        bt = &t.background[i];
+
+        // Kill process if active
+        if (!bt->finished) {
+            kill(bt->pid, SIGTERM);
+        }
+
+        // Free memory for command name
+        free(bt->cmd);
+    }
+
     return EXIT;
 }
 
@@ -179,9 +212,40 @@ int bg() {
     return CONTINUE;
 }
 
+int term(char** args) {
+    char* idx_str;      // Cursor in index arg
+    int   proc_idx = 0; // Converted to int index arg
+
+    if (args[1] == NULL) {
+        printf("[ERROR] No process index to stop!\n");
+    } else {
+        // Set cursor in index arg
+        idx_str = args[1];
+
+        // Convert string index arg to int
+        while (*idx_str >= '0' && *idx_str <= '9') {
+            proc_idx = (proc_idx * 10) + ((*idx_str) - '0');
+
+            // Move cursor to right
+            idx_str += 1;
+        }
+
+        // Kill process if process index not bad
+        // and target process not finished
+        if (*idx_str != '\0' || proc_idx >= t.cursor) {
+            printf("[ERROR] Incorrect background process index!\n");
+        } else if (!t.background[proc_idx].finished) {
+            kill(t.background[proc_idx].pid, SIGTERM);
+        }
+    }
+
+    return CONTINUE;
+}
+
 int launch(char** args) {
     pid_t pid;        // Fork process id
     int   background; // Is background task
+    int   status;     // Status of waited process
 
     // Checking if task is background
     background = is_background(args);
@@ -208,9 +272,7 @@ int launch(char** args) {
             if (add_background(pid, args[0]) == -1) {
                 // Kill all processes and free
                 // memory before exit
-                kill_all();
-
-                return EXIT;
+                quit();
             }
 
             // Add signal for removing background task
@@ -223,17 +285,10 @@ int launch(char** args) {
             // Add signal for killing child on ctrl-c
             signal(SIGINT, kill_foreground);
 
-            // Handle probably error
-            if (waitpid(pid, NULL, WUNTRACED) == -1) {
-                // Print problem
-                printf("[ERROR] Couldn't track child process!\n");
-
-                // Kill all processes and free
-                // memory before exit
-                kill_all();
-
-                return EXIT;
-            }
+            // Wait child process
+            do {
+                waitpid(pid, &status, WUNTRACED);
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
             // Set foreground to default value
             t.foreground = -1;
@@ -276,7 +331,6 @@ void kill_foreground() {
     // Kill process
     kill(t.foreground, SIGTERM);
 
-    // Set pid to default value
     t.foreground = -1;
 
     printf("\n");
@@ -322,11 +376,10 @@ void mark_background() {
     bg_task* bt;
 
     // Get process id of ended process
-    pid_t pid = wait(NULL);
+    pid_t pid = waitpid(-1, NULL, 0);
 
-    // Handle error if background process doesn't tracking
-    if (pid == -1 && t.foreground == -1) {
-        printf("[WARNING] Couldn't get id of ended process!\n");
+    // Return if stopped foreground process
+    if (pid == -1) {
         return;
     }
 
@@ -344,28 +397,5 @@ void mark_background() {
 
             break;
         }
-    }
-}
-
-void kill_all() {
-    // Temp background task variable
-    bg_task* bt;
-
-    // Kill foreground process
-    if (t.foreground != -1) {
-        kill_foreground();
-    }
-
-    for (size_t i = 0; i < t.cursor; i++) {
-        // Place task to temp variable
-        bt = &t.background[i];
-
-        // Kill process if active
-        if (!bt->finished) {
-            kill(bt->pid, SIGTERM);
-        }
-
-        // Free memory for command name
-        free(bt->cmd);
     }
 }
