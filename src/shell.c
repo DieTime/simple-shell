@@ -7,7 +7,7 @@
 #include <pwd.h>
 #include <wait.h>
 
-#include "shell.h"
+#include "../include/shell.h"
 
 // Global variable for storing
 // active tasks

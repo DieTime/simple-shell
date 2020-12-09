@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "shell.h"
+#include "include/shell.h"
 
 int main() {
     char*  line;   // User input

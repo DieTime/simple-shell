@@ -4,4 +4,4 @@ project(shell C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "-Wall -fsanitize=address -fsanitize=leak -g")
 
-add_executable(shell main.c shell.c)
+add_executable(shell main.c src/shell.c)
