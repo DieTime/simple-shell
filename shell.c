@@ -146,16 +146,17 @@ int cd(char** args) {
 
 int help() {
     printf(
-        "Simple shell by Denis Glazkov\n"
-        "Just type program names and arguments, and hit enter.\n\n"
+        "Simple shell by Denis Glazkov                                 \n"
+        "Just type program names and arguments, and hit enter.        \n\n"
 
-        "Built in functions:\n"
-        "  cd   \n"
-        "  help \n"
-        "  bg   \n"
-        "  quit \n\n"
+        "Built in functions:                                           \n"
+        "  cd   <path>        - Changes current working directory      \n"
+        "  term <bg_task_idx> - Prints list of background tasks        \n"
+        "  help               - Prints info about shell                \n"
+        "  bg                 - Prints list of background tasks        \n"
+        "  quit               - Terminates shell and all active tasks\n\n"
 
-        "Use the man command for information on other programs.\n"
+        "Use the man command for information on other programs.         \n"
     );
 
     return 1;
