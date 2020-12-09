@@ -13,8 +13,8 @@ Simple shell implementation on C using fork and signals.
 git clone https://github.com/DieTime/SimpleShell.git
 cd SimpleShell/
 
-cmake -DCMAKE_BUILD_TYPE=Release -S . -B ./cmake-build 
-cmake --build ./cmake-build --config Release
+cmake -S . -B ./cmake-build 
+cmake --build ./cmake-build
 
 cd ./cmake-build && ./shell
 help
