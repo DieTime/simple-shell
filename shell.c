@@ -146,8 +146,10 @@ int cd(char** args) {
 
 int help() {
     printf(
-        "Simple shell by Denis Glazkov                                 \n"
-        "Just type program names and arguments, and hit enter.        \n\n"
+        "Simple shell by Denis Glazkov.                               \n\n"
+
+        "Just type program names and arguments, and hit enter.          \n"
+        "Run tasks in background using '&' in the end of command.     \n\n"
 
         "Built in functions:                                           \n"
         "  cd   <path>        - Changes current working directory      \n"
