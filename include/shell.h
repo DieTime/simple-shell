@@ -1,11 +1,14 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+#include <stdbool.h>
+
 #define DEFAULT_BUFF_SIZE  16
 #define MAX_DIRECTORY_PATH 1024
 #define TOKENS_DELIMITERS  " \t"
+
 #define CONTINUE 1
-#define EXIT 0
+#define EXIT     0
 
 #define PRIMARY_COLOR   "\033[92m"
 #define SECONDARY_COLOR "\033[90m"
@@ -13,16 +16,23 @@
 
 // Struct of background task
 struct bg_task_t {
-    pid_t   pid;           // Process id
-    int     finished;      // Process state
-    char*   timestamp;     // Process state
-    char*   cmd;           // Command cmd
+    pid_t  pid;           // Process id
+    bool   finished;      // Process state
+    char*  timestamp;     // Process state
+    char*  cmd;           // Command cmd
 };
 typedef struct bg_task_t bg_task;
 
+// Struct of foreground task
+struct fg_task_t {
+    pid_t pid;           // Process id
+    bool  finished;      // Process state
+};
+typedef struct fg_task_t fg_task;
+
 // Struct of all tasks
 struct tasks_t {
-    pid_t    foreground; // Process id of foreground task
+    fg_task  foreground; // Process id of foreground bg_task
     bg_task* background; // Background tasks
     size_t   cursor;     // Cursor of background tasks
     size_t   capacity;   // Background array capacity
@@ -110,7 +120,7 @@ int term(char** args);
 int launch(char** args);
 
 /**
- * Background task checking
+ * Checking if entered task is background
  *
  * @param args - tokens for launching
  * linux shell command
@@ -142,9 +152,9 @@ void kill_foreground();
 int add_background(pid_t pid, char* name);
 
 /**
- * Handler on background process for
- * mark ended task as finished
+ * Handler on process end for mark
+ * task as finished
  */
-void mark_background();
+void mark_ended_task();
 
 #endif //SHELL_H

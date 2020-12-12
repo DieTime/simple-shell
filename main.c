@@ -8,10 +8,14 @@ int main() {
     char** args;   // Tokens in user input
     int    status; // Status of execution
 
-    signal(SIGINT, SIG_IGN);
+    // Add signal for killing foreground child on ctrl-c
+    signal(SIGINT, kill_foreground);
+
+    // Add signal for handling end of child processes
+    signal(SIGCHLD, mark_ended_task);
 
     // Shell is running while
-    // status == CONTINUE != EXIT
+    // status == CONTINUE
     do {
         // Printing left shell info
         display();

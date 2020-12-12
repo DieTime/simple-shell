@@ -9,10 +9,12 @@
 
 #include "../include/shell.h"
 
-// Global variable for storing
-// active tasks
+// Global variable for storing active tasks
 tasks t = {
-    .foreground = -1,
+    .foreground = {
+        .pid = -1,
+        .finished = true
+    },
     .background = NULL,
     .cursor = 0,
     .capacity = 0
@@ -172,13 +174,13 @@ int quit() {
     signal(SIGCHLD, SIG_IGN);
 
     // Kill foreground process
-    if (t.foreground != -1) {
+    if (!t.foreground.finished) {
         kill_foreground();
     }
 
     // Kill all active background tasks
     for (size_t i = 0; i < t.cursor; i++) {
-        // Place task to temp variable
+        // Place background task to temp variable
         bt = &t.background[i];
 
         // Kill process if active
@@ -198,7 +200,7 @@ int bg() {
     bg_task* bt;
 
     for (size_t i = 0; i < t.cursor; i++) {
-        // Store task in temp variable
+        // Store background task in temp variable
         bt = &t.background[i];
 
         // Print info about task
@@ -248,7 +250,6 @@ int term(char** args) {
 int launch(char** args) {
     pid_t pid;        // Fork process id
     int   background; // Is background task
-    int   status;     // Status of waited process
 
     // Checking if task is background
     background = is_background(args);
@@ -277,27 +278,12 @@ int launch(char** args) {
                 // memory before exit
                 quit();
             }
-
-            // Add signal for removing background task
-            // from array on task finished
-            signal(SIGCHLD, mark_background);
         } else {
-            // Set foreground task as pid
+            // Set foreground task to store
             set_foreground(pid);
 
-            // Add signal for killing child on ctrl-c
-            signal(SIGINT, kill_foreground);
-
             // Wait child process
-            do {
-                waitpid(pid, &status, WUNTRACED);
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-
-            // Set foreground to default value
-            t.foreground = -1;
-
-            // Reset signal
-            signal(SIGINT, SIG_IGN);
+            while (!t.foreground.finished) {}
         }
     }
 
@@ -327,16 +313,20 @@ int is_background(char** args) {
 }
 
 void set_foreground(pid_t pid) {
-    t.foreground = pid;
+    t.foreground.pid = pid;
+    t.foreground.finished = 0;
 }
 
 void kill_foreground() {
-    // Kill process
-    kill(t.foreground, SIGTERM);
+    if (t.foreground.pid != -1) {
+        // Kill process
+        kill(t.foreground.pid, SIGTERM);
 
-    t.foreground = -1;
+        // Set finished flag
+        t.foreground.finished = true;
 
-    printf("\n");
+        printf("\n");
+    }
 }
 
 int add_background(pid_t pid, char* name) {
@@ -361,7 +351,7 @@ int add_background(pid_t pid, char* name) {
 
     // Save process info in array
     bt->pid = pid;
-    bt->finished = 0;
+    bt->finished = false;
 
     time_t timestamp = time(NULL);
     bt->timestamp = ctime(&timestamp);
@@ -374,31 +364,33 @@ int add_background(pid_t pid, char* name) {
     return 0;
 }
 
-void mark_background() {
+void mark_ended_task() {
     // Temp background task variable
     bg_task* bt;
 
     // Get process id of ended process
     pid_t pid = waitpid(-1, NULL, 0);
 
-    // Return if stopped foreground process
-    if (pid == -1) {
-        return;
+    // Handle foreground process
+    if (pid == t.foreground.pid) {
+        t.foreground.finished = true;
     }
+    // Handle background process
+    else {
+        // Search and remove process form background tasks array
+        for (size_t i = 0; i < t.cursor; i++) {
+            // Place task to temp variable
+            bt = &t.background[i];
 
-    // Search and remove process form background tasks array
-    for (size_t i = 0; i < t.cursor; i++) {
-        // Place task to temp variable
-        bt = &t.background[i];
+            if (bt->pid == pid) {
+                // Print info about process end
+                printf("[%zu] finished.\n", i);
 
-        if (bt->pid == pid) {
-            // Print info about process end
-            printf("[%zu] finished.\n", i);
+                // Set new state for background process
+                bt->finished = 1;
 
-            // Set new state for background process
-            bt->finished = 1;
-
-            break;
+                break;
+            }
         }
     }
 }
