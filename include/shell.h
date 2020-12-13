@@ -25,8 +25,8 @@ typedef struct bg_task_t bg_task;
 
 // Struct of foreground task
 struct fg_task_t {
-    pid_t pid;           // Process id
-    bool  finished;      // Process state
+    pid_t pid;              // Process id
+    volatile bool finished; // Process state
 };
 typedef struct fg_task_t fg_task;
 
