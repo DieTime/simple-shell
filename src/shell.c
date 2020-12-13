@@ -42,7 +42,8 @@ char* readline() {
     size_t position  = 0;
     size_t buff_size = DEFAULT_BUFF_SIZE;
 
-    int character;
+    int   character;
+    char* temp_buffer;
 
     // Allocating memory for line
     char* buffer  = (char*)malloc(sizeof(char) * buff_size);
@@ -54,6 +55,13 @@ char* readline() {
     // Process of reading
     character = getchar();
     while (character != '\0' && character != '\n') {
+        // Handle Ctrl-D
+        if (character == EOF) {
+            free(buffer);
+            printf("\n");
+            return NULL;
+        }
+
         // Emplace character to buffer
         buffer[position++] = (char)character;
 
@@ -61,11 +69,13 @@ char* readline() {
         if (position >= buff_size) {
             buff_size *= 2;
 
-            buffer = (char*)realloc(buffer, buff_size);
+            temp_buffer = (char*)realloc(buffer, buff_size);
             if (buffer == NULL) {
                 printf("[ERROR] Couldn't reallocate buffer for reading!\n");
+                free(buffer);
                 return NULL;
             }
+            buffer = temp_buffer;
         }
 
         // Read next character
