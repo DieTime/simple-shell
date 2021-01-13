@@ -140,7 +140,7 @@ int help() {
 
         "Built in functions:                                           \n"
         "  cd   <path>        - Changes current working directory      \n"
-        "  term <bg_task_idx> - Prints list of background tasks        \n"
+        "  term <bg_task_idx> - Kill background process by index       \n"
         "  help               - Prints info about shell                \n"
         "  bg                 - Prints list of background tasks        \n"
         "  quit               - Terminates shell and all active tasks\n\n"
