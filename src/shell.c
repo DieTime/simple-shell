@@ -148,7 +148,7 @@ int help() {
         "Use the man command for information on other programs.         \n"
     );
 
-    return 1;
+    return CONTINUE;
 }
 
 int quit() {
