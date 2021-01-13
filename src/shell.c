@@ -267,8 +267,14 @@ int launch(char** args) {
             // Set foreground task to store
             set_foreground(pid);
 
-            // Wait child process
-            while (!t.foreground.finished) {}
+            // Wait while process not ended
+            if (waitpid(pid, NULL, 0) == -1) {
+                // Logging error if process tracked with error
+                // Except when interrupted by a signal
+                if (errno != EINTR) {
+                    printf("[ERROR] Couldn't track the completion of the process!\n");
+                }
+            }
         }
     }
 
