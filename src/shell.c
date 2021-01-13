@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <pwd.h>
 #include <wait.h>
+#include <errno.h>
 
 #include "../include/shell.h"
 
@@ -39,53 +40,27 @@ void display() {
 }
 
 char* readline() {
-    size_t position  = 0;
-    size_t buff_size = DEFAULT_BUFF_SIZE;
+    char*   line = NULL;
+    size_t  size = 0;
+    ssize_t str_len;
 
-    int   character;
-    char* temp_buffer;
-
-    // Allocating memory for line
-    char* buffer  = (char*)malloc(sizeof(char) * buff_size);
-    if (buffer == NULL) {
-        printf("[ERROR] Couldn't allocate buffer for reading!\n");
+    // Reading line from stdin
+    if ((str_len = getline(&line, &size, stdin)) == -1) {
+        // Logging all errors except Ctrl-D - terminal shutdown
+        if (errno != 0) {
+            printf("[ERROR] Couldn't read from stdin\n");
+        }
+        free(line);
+        printf("\n");
         return NULL;
     }
 
-    // Process of reading
-    character = getchar();
-    while (character != '\0' && character != '\n') {
-        // Handle Ctrl-D
-        if (character == EOF) {
-            free(buffer);
-            printf("\n");
-            return NULL;
-        }
-
-        // Emplace character to buffer
-        buffer[position++] = (char)character;
-
-        // If buffer free space ended - increase buffer
-        if (position >= buff_size) {
-            buff_size *= 2;
-
-            temp_buffer = (char*)realloc(buffer, buff_size);
-            if (buffer == NULL) {
-                printf("[ERROR] Couldn't reallocate buffer for reading!\n");
-                free(buffer);
-                return NULL;
-            }
-            buffer = temp_buffer;
-        }
-
-        // Read next character
-        character = getchar();
+    // Remove useless \n symbol if exists
+    if (line[str_len - 1] == '\n') {
+        line[str_len - 1] = '\0';
     }
 
-    // Emplace end of line to buffer
-    buffer[position] = '\0';
-
-    return buffer;
+    return line;
 }
 
 char** split(char* line) {
@@ -180,7 +155,7 @@ int quit() {
     // Temp background task variable
     bg_task* bt;
 
-    // Disable callbacks on child killed
+    // Disable logging on child killed
     signal(SIGCHLD, SIG_IGN);
 
     // Kill foreground process
@@ -318,7 +293,7 @@ int is_background(char** args) {
         return 1;
     }
 
-    // Return false if  '&' wasn't founded
+    // Return false if: '&' wasn't founded
     return 0;
 }
 
